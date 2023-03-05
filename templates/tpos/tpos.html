@@ -1,13 +1,10 @@
-{% extends "public.html" %} {% block toolbar_title %} {{ tpos.name }}
-<q-btn
-  flat
-  dense
-  size="md"
-  @click.prevent="urlDialog.show = true"
-  icon="share"
-  color="white"
-></q-btn>
-{% endblock %} {% block footer %}{% endblock %} {% block page_container %}
+{% extends "public.html" %}
+
+{% block toolbar_title %} <img height="25px" alt="Logo" src="{{ USE_CUSTOM_LOGO }}" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <small>{{ tpos.name }}</small>{% endblock %}
+{% block drawer_toggle %}{% endblock %}
+{% block drawer %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block page_container %}
 <q-page-container>
   <q-page>
     <q-page-sticky v-if="exchangeRate" expand position="top">
@@ -340,6 +337,7 @@
     grid-gap: 8px;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
+    padding: 40px;
   }
 
   .keypad .btn {
@@ -500,8 +498,8 @@
           .post('/tpos/api/v1/tposs/' + this.tposId + '/invoices', null, {
             params: {
               amount: this.sat,
-              memo: this.amountFormatted,
-              tipAmount: this.tipAmountSat
+              tipAmount: this.tipAmountSat,
+              famount: this.amount
             }
           })
           .then(function (response) {
