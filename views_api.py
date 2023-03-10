@@ -58,7 +58,7 @@ async def api_tpos_delete(
 
 @tpos_ext.post("/api/v1/tposs/{tpos_id}/invoices", status_code=HTTPStatus.CREATED)
 async def api_tpos_create_invoice(
-    tpos_id: str, amount: int = Query(..., ge=1), memo: str = "", tipAmount: int = 0
+    tpos_id: str, amount: int = Query(..., ge=1), memo: str = "", tipAmount: int = 0, famount: str = None
 ) -> dict:
 
     tpos = await get_tpos(tpos_id)
@@ -72,6 +72,7 @@ async def api_tpos_create_invoice(
         amount += tipAmount
 
     try:
+        memo=str(tpos.name) + " (" + str(famount) + " " + str(tpos.currency) + ")"
         payment_hash, payment_request = await create_invoice(
             wallet_id=tpos.wallet,
             amount=amount,
