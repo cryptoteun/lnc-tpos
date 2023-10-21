@@ -10,11 +10,16 @@ from lnbits.core.crud import get_latest_payments_by_extension, get_user
 from lnbits.core.models import Payment
 from lnbits.core.services import create_invoice
 from lnbits.core.views.api import api_payment
-from lnbits.decorators import WalletTypeInfo, get_key_type, require_admin_key
-from lnbits.settings import settings
+from lnbits.decorators import (
+    WalletTypeInfo,
+    check_admin,
+    get_key_type,
+    require_admin_key,
+)
+from lnbits.utils.exchange_rates import get_fiat_rate_satoshis
 
-from . import tpos_ext
-from .crud import create_tpos, delete_tpos, get_tpos, get_tposs
+from . import scheduled_tasks, tpos_ext
+from .crud import create_tpos, delete_tpos, get_tpos, get_tposs, update_tpos
 from .models import CreateTposData, PayLnurlWData
 
 
@@ -35,6 +40,25 @@ async def api_tpos_create(
     data: CreateTposData, wallet: WalletTypeInfo = Depends(get_key_type)
 ):
     tpos = await create_tpos(wallet_id=wallet.wallet.id, data=data)
+    return tpos.dict()
+
+
+@tpos_ext.put("/api/v1/tposs/{tpos_id}")
+async def api_tpos_update(
+    data: CreateTposData,
+    tpos_id: str,
+    wallet: WalletTypeInfo = Depends(require_admin_key),
+):
+    if not tpos_id:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail="TPoS does not exist."
+        )
+    tpos = await get_tpos(tpos_id)
+    assert tpos, "TPoS couldn't be retrieved"
+
+    if wallet.wallet.id != tpos.wallet:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Not your TPoS.")
+    tpos = await update_tpos(tpos_id, **data.dict())
     return tpos.dict()
 
 
@@ -60,7 +84,6 @@ async def api_tpos_delete(
 async def api_tpos_create_invoice(
     tpos_id: str, amount: int = Query(..., ge=1), memo: str = "", tipAmount: int = 0, famount: str = None
 ) -> dict:
-
     tpos = await get_tpos(tpos_id)
 
     if not tpos:
@@ -142,7 +165,7 @@ async def api_tpos_pay_invoice(
 
     async with httpx.AsyncClient() as client:
         try:
-            headers = {"user-agent": f"lnbits/tpos commit {settings.lnbits_commit[:7]}"}
+            headers = {"user-agent": f"lnbits/tpos"}
             r = await client.get(lnurl, follow_redirects=True, headers=headers)
             if r.is_error:
                 lnurl_response = {"success": False, "detail": "Error loading"}
@@ -192,3 +215,29 @@ async def api_tpos_check_invoice(tpos_id: str, payment_hash: str):
         logger.error(exc)
         return {"paid": False}
     return status
+
+
+@tpos_ext.delete(
+    "/api/v1",
+    status_code=HTTPStatus.OK,
+    dependencies=[Depends(check_admin)],
+    description="Stop the extension.",
+)
+async def api_stop():
+    for t in scheduled_tasks:
+        try:
+            t.cancel()
+        except Exception as ex:
+            logger.warning(ex)
+
+    return {"success": True}
+
+
+@tpos_ext.get("/api/v1/rate/{currency}", status_code=HTTPStatus.OK)
+async def api_check_fiat_rate(currency):
+    try:
+        rate = await get_fiat_rate_satoshis(currency)
+    except AssertionError:
+        rate = None
+
+    return {"rate": rate}
