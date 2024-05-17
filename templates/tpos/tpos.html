@@ -1,9 +1,6 @@
 {% extends "public.html" %}
 {% block toolbar_title %} <img height="25px" alt="Logo" src="{{ USE_CUSTOM_LOGO }}" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <small>{{ tpos.name }}</small>{% endblock %}
-{% block drawer_toggle %}{% endblock %}
-{% block drawer %}{% endblock %}
-{% block footer %}{% endblock %}
-{% block page_container %}
+{% block footer %}{% endblock %} {% block page_container %}
 <q-page-container>
   <q-page>
     <q-page-sticky v-if="exchangeRate && showPoS" expand position="top">
