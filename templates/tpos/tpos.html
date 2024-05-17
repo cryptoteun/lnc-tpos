@@ -7,17 +7,6 @@
   icon="share"
   color="white"
 ></q-btn>
-<q-btn-toggle
-  v-model="monochrome"
-  toggle-color="primary"
-  :options="[
-        {label: 'Color', value: false},
-        {label: 'Mono', value: true}
-      ]"
-  size="sm"
-  @input="handleColorScheme"
-  class="q-ml-md"
-/>
 {% endblock %} {% block footer %}{% endblock %} {% block page_container %}
 <q-page-container>
   <q-page>
@@ -761,7 +750,7 @@
             rowsPerPage: 10
           }
         },
-        monochrome: this.$q.localStorage.getItem('lnbits.tpos.color') || false,
+        monochrome: this.$q.localStorage.getItem('lnbits.tpos.color') || true,
         showPoS: true,
         cartDrawer: this.$q.screen.width > 1200,
         searchTerm: '',
