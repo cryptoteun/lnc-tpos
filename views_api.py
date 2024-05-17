@@ -95,7 +95,6 @@ async def api_tpos_create_invoice(
     memo: str = "",
     tipAmount: int = 0,
     details: str = Query(None),
-    famount: str = None,
 ) -> dict:
     tpos = await get_tpos(tpos_id)
 
@@ -108,11 +107,10 @@ async def api_tpos_create_invoice(
         amount += tipAmount
 
     try:
-        memo=str(tpos.name) + " (" + str(famount) + " " + str(tpos.currency) + ")"
         payment_hash, payment_request = await create_invoice(
             wallet_id=tpos.wallet,
             amount=amount,
-            memo=f"{memo}" if memo else f"{tpos.name}",
+            memo=f"{tpos.name} ({memo})" if memo else f"{tpos.name}",
             extra={
                 "tag": "tpos",
                 "tipAmount": tipAmount,
