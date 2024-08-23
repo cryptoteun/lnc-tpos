@@ -94,7 +94,7 @@ const tposJS = async () => {
             rowsPerPage: 10
           }
         },
-        monochrome: this.$q.localStorage.getItem('lnbits.tpos.color') || false,
+        monochrome: this.$q.localStorage.getItem('lnbits.tpos.color') || true,
         showPoS: true,
         cartDrawer: this.$q.screen.width > 1200,
         searchTerm: '',
